@@ -1,1 +1,2 @@
-# maxp_baseline_model
+# MAXP竞赛——DGL图数据Baseline模型
+
