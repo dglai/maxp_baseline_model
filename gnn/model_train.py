@@ -366,6 +366,7 @@ if __name__ == '__main__':
     # Retrieve preprocessed data
     graph, labels, train_nid, val_nid, test_nid, node_feat = load_dgl_graph(BASE_PATH)
     graph = dgl.to_bidirected(graph, copy_ndata=True)
+    graph = dgl.add_self_loop(graph)
 
     # call train with CPU, one GPU, or multiple GPUs
     if GPUS[0] < 0:
