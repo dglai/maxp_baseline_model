@@ -38,7 +38,7 @@ def cleanup():
     dist.destroy_process_group()
 
 
-def cpu_train(base_path,
+def cpu_train(graph_data,
               gnn_model,
               hidden_dim,
               n_layers,
@@ -52,10 +52,7 @@ def cpu_train(base_path,
     """
         运行在CPU设备上的训练代码。由于数据量很大，仅仅用于代码调试。建议有GPU的，请使用下面的GPU设备训练的代码已提高训练速度。
     """
-
-    # 1 prepare data
-    graph, labels, train_nid, val_nid, test_nid, node_feat = load_dgl_graph(base_path)
-    # graph = dgl.to_bidirected(graph)
+    graph, labels, train_nid, val_nid, test_nid, node_feat = graph_data
 
     sampler = MultiLayerNeighborSampler(fanouts)
     train_dataloader = NodeDataLoader(graph,
@@ -128,7 +125,7 @@ def cpu_train(base_path,
 
 
 def gpu_train(proc_id, n_gpus, GPUS,
-              base_path, gnn_model,
+              graph_data, gnn_model,
               hidden_dim, n_layers, n_classes, fanouts,
               batch_size=32, num_workers=4, epochs=100, message_queue=None,
               output_folder='./output'):
@@ -144,8 +141,7 @@ def gpu_train(proc_id, n_gpus, GPUS,
                                                            start_t.minute,
                                                            start_t.second))
 
-    graph, labels, train_nid, val_nid, test_nid, node_feat = load_dgl_graph(base_path)
-    graph = dgl.to_bidirected(graph, copy_ndata=True)
+    graph, labels, train_nid, val_nid, test_nid, node_feat = graph_data
 
     train_div, _ = divmod(train_nid.shape[0], n_gpus)
     val_div, _ = divmod(val_nid.shape[0], n_gpus)
@@ -367,10 +363,14 @@ if __name__ == '__main__':
     print('Max number of epochs: {}'.format(EPOCHS))
     print('Output path: {}'.format(OUT_PATH))
 
-    # call train with multiple GPUs or one GPU
+    # Retrieve preprocessed data
+    graph, labels, train_nid, val_nid, test_nid, node_feat = load_dgl_graph(BASE_PATH)
+    graph = dgl.to_bidirected(graph, copy_ndata=True)
+
+    # call train with CPU, one GPU, or multiple GPUs
     if GPUS[0] < 0:
         cpu_device = th.device('cpu')
-        cpu_train(base_path=BASE_PATH,
+        cpu_train(graph_data=(graph, labels, train_nid, val_nid, test_nid, node_feat),
                   gnn_model=MODEL_CHOICE,
                   n_layers=N_LAYERS,
                   hidden_dim=HID_DIM,
@@ -385,7 +385,8 @@ if __name__ == '__main__':
         n_gpus = len(GPUS)
 
         if n_gpus == 1:
-            gpu_train(0, n_gpus, GPUS, BASE_PATH,
+            gpu_train(0, n_gpus, GPUS,
+                      graph_data=(graph, labels, train_nid, val_nid, test_nid, node_feat),
                       gnn_model=MODEL_CHOICE, hidden_dim=HID_DIM, n_layers=N_LAYERS, n_classes=23,
                       fanouts=FANOUTS, batch_size=BATCH_SIZE, num_workers=WORKERS, epochs=EPOCHS,
                       message_queue=None, output_folder=OUT_PATH)
