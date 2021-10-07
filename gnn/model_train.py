@@ -241,7 +241,7 @@ def gpu_train(proc_id, n_gpus, GPUS,
         model.train()
         for step, (input_nodes, seeds, blocks) in enumerate(train_dataloader):
             # forward
-            batch_inputs, batch_labels = load_subtensor(graph, labels, seeds, input_nodes, device_id)
+            batch_inputs, batch_labels = load_subtensor(node_feat, labels, seeds, input_nodes, device_id)
             blocks = [block.to(device_id) for block in blocks]
             # metric and loss
             train_batch_logits = model(blocks, batch_inputs)
@@ -256,9 +256,9 @@ def gpu_train(proc_id, n_gpus, GPUS,
 
             if step % 100 == 0:
                 print('In epoch:{:03d}|batch:{:04d}, train_loss:{:4f}, train_acc:{:.4f}'.format(epoch,
-                                                                              step,
-                                                                              np.mean(train_loss_list),
-                                                                              tr_batch_pred.detech()))
+                                                                                                step,
+                                                                                                np.mean(train_loss_list),
+                                                                                                tr_batch_pred.detech()))
 
         # mini-batch for validation
         val_loss_list = []
@@ -266,7 +266,7 @@ def gpu_train(proc_id, n_gpus, GPUS,
         model.eval()
         for step, (input_nodes, seeds, blocks) in enumerate(val_dataloader):
             # forward
-            batch_inputs, batch_labels = load_subtensor(graph, labels, seeds, input_nodes, device_id)
+            batch_inputs, batch_labels = load_subtensor(node_feat, labels, seeds, input_nodes, device_id)
             blocks = [block.to(device_id) for block in blocks]
             # metric and loss
             val_batch_logits = model(blocks, batch_inputs)
