@@ -241,7 +241,7 @@ def gpu_train(proc_id, n_gpus, GPUS,
         model.train()
         for step, (input_nodes, seeds, blocks) in enumerate(train_dataloader):
             # forward
-            batch_inputs, batch_labels = load_subtensor(graph, seeds, input_nodes, device_id)
+            batch_inputs, batch_labels = load_subtensor(graph, labels, seeds, input_nodes, device_id)
             blocks = [block.to(device_id) for block in blocks]
             # metric and loss
             train_batch_logits = model(blocks, batch_inputs)
@@ -266,7 +266,7 @@ def gpu_train(proc_id, n_gpus, GPUS,
         model.eval()
         for step, (input_nodes, seeds, blocks) in enumerate(val_dataloader):
             # forward
-            batch_inputs, batch_labels = load_subtensor(graph, seeds, input_nodes, device_id)
+            batch_inputs, batch_labels = load_subtensor(graph, labels, seeds, input_nodes, device_id)
             blocks = [block.to(device_id) for block in blocks]
             # metric and loss
             val_batch_logits = model(blocks, batch_inputs)
