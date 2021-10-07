@@ -22,21 +22,21 @@ def load_dgl_graph(base_path):
     print(graph)
 
     with open(os.path.join(base_path, 'labels.pkl'), 'rb') as f:
-        labels = pickle.load(f)
+        label_data = pickle.load(f)
 
-    label = labels['label']
-    tr_label_idx = labels['tr_label_idx']
-    val_label_idx = labels['val_label_idx']
-    test_label_idx = labels['test_label_idx']
+    labels = th.from_numpy(label_data['label'])
+    tr_label_idx = label_data['tr_label_idx']
+    val_label_idx = label_data['val_label_idx']
+    test_label_idx = label_data['test_label_idx']
     print('################ Label info: ################')
-    print('Total labels (including not labeled): {}'.format(label.shape[0]))
+    print('Total labels (including not labeled): {}'.format(labels.shape[0]))
     print('               Training label number: {}'.format(tr_label_idx.shape[0]))
     print('             Validation label number: {}'.format(val_label_idx.shape[0]))
     print('                   Test label number: {}'.format(test_label_idx.shape[0]))
 
     # get node features
     features = np.load(os.path.join(base_path, 'features.npy'))
-    node_feat = th.from_numpy(features)
+    node_feat = th.from_numpy(features).float()
     print('################ Feature info: ###############')
     print('Node\'s feature shape:{}'.format(node_feat.shape))
 

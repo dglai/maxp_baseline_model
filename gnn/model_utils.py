@@ -1,5 +1,3 @@
-#-*- coding:utf-8 -*-
-
 # Author:james Zhang
 """
     utilities file for Pytorch models
@@ -50,7 +48,7 @@ class early_stopper(object):
 # is necessary to make fork() and openmp work together.
 def thread_wrapped_func(func):
     """
-    Wraps a process entry point to make it work with OpenMP.
+    用于Pytorch的OpenMP的包装方法。Wraps a process entry point to make it work with OpenMP.
     """
     @wraps(func)
     def decorated_function(*args, **kwargs):

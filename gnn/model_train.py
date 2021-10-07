@@ -1,14 +1,9 @@
-#-*- coding:utf-8 -*-
-
 # Author:james Zhang
 """
     Minibatch training with node neighbor sampling in multiple GPUs
 """
 
 import os
-import sys
-sys.path.append('..')
-
 import argparse
 import datetime as dt
 import numpy as np
@@ -53,21 +48,21 @@ def cpu_train(base_path,
               epochs,
               out_path):
     """
-        Just for code debugging purpose...
+        运行在CPU设备上的训练代码。由于数据量很大，仅仅用于代码调试。建议有GPU的，请使用下面的GPU设备训练的代码已提高训练速度。
     """
 
     # 1 prepare data
-    graph, node_feat, labels, train_nid, val_nid = load_dgl_graph(base_path)
+    graph, labels, train_nid, val_nid, test_nid, node_feat = load_dgl_graph(base_path)
     # graph = dgl.to_bidirected(graph)
 
     sampler = MultiLayerNeighborSampler(fanouts)
     train_dataloader = NodeDataLoader(graph,
-                                train_nid,
-                                sampler,
-                                batch_size=batch_size,
-                                shuffle=False,
-                                drop_last=False,
-                                num_workers=num_workers)
+                                      train_nid,
+                                      sampler,
+                                      batch_size=batch_size,
+                                      shuffle=True,
+                                      drop_last=False,
+                                      num_workers=num_workers)
 
     # 2 initialize GNN model
     in_feat = node_feat.shape[1]
@@ -94,27 +89,25 @@ def cpu_train(base_path,
     iter_tput = []
     start_t = dt.datetime.now()
 
-    print('Start graph building at: {}-{} {}:{}:{}'.format(start_t.month,
-                                                           start_t.day,
-                                                           start_t.hour,
-                                                           start_t.minute,
-                                                           start_t.second))
+    print('Start training at: {}-{} {}:{}:{}'.format(start_t.month,
+                                                     start_t.day,
+                                                     start_t.hour,
+                                                     start_t.minute,
+                                                     start_t.second))
 
     for epoch in range(epochs):
 
         for step, (input_nodes, seeds, mfgs) in enumerate(train_dataloader):
-            # output sampling results
-            # print('---------------------------')
-            # print(input_nodes)
-            # print(seeds)
-            # [print(block.edges()) for block in blocks]
+
             start_t = dt.datetime.now()
 
             batch_inputs, batch_labels = load_subtensor(node_feat, labels, seeds, input_nodes, device)
             mfgs = [mfg.to(device) for mfg in mfgs]
 
-            batch_pred = model(mfgs, batch_inputs)
-            loss = loss_fn(batch_pred, batch_labels)
+            batch_logit = model(mfgs, batch_inputs)
+            loss = loss_fn(batch_logit, batch_labels)
+            pred = th.sum(th.argmax(batch_logit, dim=1) == batch_labels) / th.tensor(batch_labels.shape[0])
+
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -122,7 +115,8 @@ def cpu_train(base_path,
             e_t1 = dt.datetime.now()
             h, m, s = time_diff(e_t1, start_t)
 
-            print('In epoch:{:03d}|batch:{}, loss:{:4f}, time:{}h{}m{}s'.format(epoch, step, loss, h, m, s))
+            print('In epoch:{:03d}|batch:{}, loss:{:4f}, acc:{:4f}, time:{}h{}m{}s'.format(epoch, step, loss, pred.detach(),
+                                                                                        h, m, s))
 
     # 5 save model if need
     #     pass
@@ -322,9 +316,9 @@ def gpu_train(proc_id, n_gpus, GPUS,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='DGL_SamplingTrain')
-    parser.add_argument('--data_path', type=str, required=False, help="Path of saved CSV files.")
+    parser.add_argument('--data_path', type=str, help="Path of saved processed data files.")
     parser.add_argument('--gnn_model', type=str, choices=['graphsage', 'graphconv', 'graphattn'],
-                        required=True, default='graphsage', )
+                        required=True, default='graphsage')
     parser.add_argument('--hidden_dim', type=int, required=True)
     parser.add_argument('--n_layers', type=int, default=2)
     parser.add_argument("--fanout", type=str, required=True, help="fanout numbers", default='20,20')
