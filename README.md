@@ -28,7 +28,7 @@ python model_train.py --data_path path/to/processed_data --gnn_model graphsage -
 
 *注意*：请把--data_path的路径替换成用Jupyter Notebook文件处理后数据所在的位置路径。其余的参数，请参考model_train.py里面的入参说明修改。
 
-如果希望使用单GPU进行模型训练，则需要修改入参 `--GPU`的输入值为你的GPU的编号，如：
+如果希望使用单GPU进行模型训练，则需要修改入参 `--GPU`的输入值为单个GPU的编号，如：
 ```bash
 --GPU 0
 ```
