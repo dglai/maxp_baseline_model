@@ -395,7 +395,8 @@ if __name__ == '__main__':
             procs = []
             for proc_id in range(n_gpus):
                 p = mp.Process(target=gpu_train,
-                               args=(proc_id, n_gpus, GPUS, BASE_PATH,
+                               args=(proc_id, n_gpus, GPUS,
+                                     (graph, labels, train_nid, val_nid, test_nid, node_feat),
                                      MODEL_CHOICE, HID_DIM, N_LAYERS, 23,
                                      FANOUTS, BATCH_SIZE, WORKERS, EPOCHS,
                                      message_queue, OUT_PATH))
