@@ -258,7 +258,7 @@ def gpu_train(proc_id, n_gpus, GPUS,
                 print('In epoch:{:03d}|batch:{:04d}, train_loss:{:4f}, train_acc:{:.4f}'.format(epoch,
                                                                                                 step,
                                                                                                 np.mean(train_loss_list),
-                                                                                                tr_batch_pred.detech()))
+                                                                                                tr_batch_pred.detach()))
 
         # mini-batch for validation
         val_loss_list = []
