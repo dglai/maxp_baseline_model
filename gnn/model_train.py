@@ -1,3 +1,5 @@
+#-*- coding:utf-8 -*-
+
 # Author:james Zhang
 """
     Minibatch training with node neighbor sampling in multiple GPUs

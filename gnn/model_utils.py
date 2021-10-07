@@ -1,3 +1,5 @@
+#-*- coding:utf-8 -*-
+
 # Author:james Zhang
 """
     utilities file for Pytorch models
