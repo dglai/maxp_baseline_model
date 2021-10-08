@@ -216,7 +216,7 @@ def gpu_train(proc_id, n_gpus, GPUS,
 
     # ------------------- 3. Build loss function and optimizer -------------------------- #
     loss_fn = thnn.CrossEntropyLoss().to(device_id)
-    optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=5e-4)
+    optimizer = optim.Adam(model.parameters(), lr=0.004, weight_decay=5e-4)
 
     earlystoper = early_stopper(patience=2, verbose=False)
 
@@ -224,12 +224,6 @@ def gpu_train(proc_id, n_gpus, GPUS,
     print('Plan to train {} epoches \n'.format(epochs))
 
     for epoch in range(epochs):
-        start_t = dt.datetime.now()
-        print('Start training at: {}-{} {}:{}:{}'.format(start_t.month,
-                                                         start_t.day,
-                                                         start_t.hour,
-                                                         start_t.minute,
-                                                         start_t.second))
 
         # mini-batch for training
         train_loss_list = []
@@ -250,7 +244,7 @@ def gpu_train(proc_id, n_gpus, GPUS,
             train_loss_list.append(train_loss.cpu().detach().numpy())
             tr_batch_pred = th.sum(th.argmax(train_batch_logits, dim=1) == batch_labels) / th.tensor(batch_labels.shape[0])
 
-            if step % 100 == 0:
+            if step % 10 == 0:
                 print('In epoch:{:03d}|batch:{:04d}, train_loss:{:4f}, train_acc:{:.4f}'.format(epoch,
                                                                                                 step,
                                                                                                 np.mean(train_loss_list),
@@ -271,7 +265,7 @@ def gpu_train(proc_id, n_gpus, GPUS,
             val_loss_list.append(val_loss.detach().cpu().numpy())
             val_batch_pred = th.sum(th.argmax(val_batch_logits, dim=1) == batch_labels) / th.tensor(batch_labels.shape[0])
 
-            if step % 100 == 0:
+            if step % 10 == 0:
                 print('In epoch:{:03d}|batch:{:04d}, val_loss:{:4f}, val_acc:{:.4f}'.format(epoch,
                                                                                             step,
                                                                                             np.mean(val_loss_list),
@@ -302,25 +296,16 @@ def gpu_train(proc_id, n_gpus, GPUS,
     # plot_p_r_curve(val_y.cpu().numpy(), best_logits[:, 1])
 
     # -------------------------6. Save models --------------------------------------#
+    model_path = os.path.join(output_folder, 'dgl_model-' + '{:06d}'.format(np.random.randint(100000)) + '.pth')
+
     if n_gpus > 1:
         if proc_id == 0:
-            start_t = dt.datetime.now()
-            print('Save Model at: {}-{} {}:{}:{}'.format(start_t.month, start_t.day, start_t.hour, start_t.minute,
-                                                               start_t.second))
             model_para_dict = model.state_dict()
-            model_path = os.path.join(output_folder, 'dgl_model-' + '{:03d}'.format(epoch) + '.pth')
-
             th.save(model_para_dict, model_path)
-
             # after trainning, remember to cleanup and release resouces
             cleanup()
     else:
-        start_t = dt.datetime.now()
-        print('Save Model at: {}-{} {}:{}:{}'.format(start_t.month, start_t.day, start_t.hour, start_t.minute,
-                                                     start_t.second))
         model_para_dict = model.state_dict()
-        model_path = os.path.join(output_folder, 'dgl_model-' + '{:03d}'.format(epoch) + '.pth')
-
         th.save(model_para_dict, model_path)
 
 
@@ -363,7 +348,7 @@ if __name__ == '__main__':
     print('Max number of epochs: {}'.format(EPOCHS))
     print('Output path: {}'.format(OUT_PATH))
 
-    # Retrieve preprocessed data
+    # Retrieve preprocessed data and add reverse edge and self-loop
     graph, labels, train_nid, val_nid, test_nid, node_feat = load_dgl_graph(BASE_PATH)
     graph = dgl.to_bidirected(graph, copy_ndata=True)
     graph = dgl.add_self_loop(graph)
