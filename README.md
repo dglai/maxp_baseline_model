@@ -20,13 +20,17 @@
 对于4个Jupyter Notebook文件，请使用Jupyter环境运行，并注意把其中的竞赛数据文件所在的文件夹替换为你自己保存数据文件的文件夹。
 并记录下你处理完成后的数据文件所在的位置，供下面模型训练使用。
 
+**注意：** 在运行*MAXP 2021初赛数据探索和处理-2*时，内存的使用量会比较高。这个在Mac上运行没有出现问题，但是尚未在Windows和Linux环境测试。
+如果在这两种环境下遇到内存问题，建议找一个内存大一些的机器处理，或者修改代码，一部分一部分的处理。
+
+---------
 对于GNN的模型，需要先cd到gnn目录，然后运行：
 
 ```bash
 python model_train.py --data_path path/to/processed_data --gnn_model graphsage --hidden_dim 64 --n_layers 2 --fanout 20,20 --batch_size 4096 --GPU -1 --out_path ./
 ```
 
-*注意*：请把--data_path的路径替换成用Jupyter Notebook文件处理后数据所在的位置路径。其余的参数，请参考model_train.py里面的入参说明修改。
+**注意**：请把--data_path的路径替换成用Jupyter Notebook文件处理后数据所在的位置路径。其余的参数，请参考model_train.py里面的入参说明修改。
 
 如果希望使用单GPU进行模型训练，则需要修改入参 `--GPU`的输入值为单个GPU的编号，如：
 ```bash
