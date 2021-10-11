@@ -50,7 +50,9 @@ def cpu_train(graph_data,
               epochs,
               out_path):
     """
-        运行在CPU设备上的训练代码。由于数据量很大，仅仅用于代码调试。建议有GPU的，请使用下面的GPU设备训练的代码已提高训练速度。
+        运行在CPU设备上的训练代码。
+        由于比赛数据量比较大，因此这个部分的代码建议仅用于代码调试。
+        有GPU的，请使用下面的GPU设备训练的代码来提高训练速度。
     """
     graph, labels, train_nid, val_nid, test_nid, node_feat = graph_data
 
@@ -120,8 +122,8 @@ def cpu_train(graph_data,
                                                                                            pred.detach(),
                                                                                            h, m, s))
 
-    # 5 save model if need
-    #     pass
+    # 5 保存模型
+    #     此处就省略了
 
 
 def gpu_train(proc_id, n_gpus, GPUS,
