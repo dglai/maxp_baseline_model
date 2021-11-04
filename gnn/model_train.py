@@ -135,6 +135,14 @@ def gpu_train(proc_id, n_gpus, GPUS,
     device_id = GPUS[proc_id]
     print('Use GPU {} for training ......'.format(device_id))
 
+    if n_gpus > 1:
+        dist_init_method = 'tcp://{}:{}'.format('127.0.0.1', '23456')
+        world_size = n_gpus
+        dist.init_process_group(backend='nccl',
+                                init_method=dist_init_method,
+                                world_size=world_size,
+                                rank=proc_id)
+
     # ------------------- 1. Prepare data and split for multiple GPUs ------------------- #
     start_t = dt.datetime.now()
     print('Start graph building at: {}-{} {}:{}:{}'.format(start_t.month,
@@ -161,6 +169,7 @@ def gpu_train(proc_id, n_gpus, GPUS,
     train_dataloader = NodeDataLoader(graph,
                                       train_nid_per_gpu,
                                       sampler,
+                                      use_ddp=n_gpus > 1,
                                       batch_size=batch_size,
                                       shuffle=True,
                                       drop_last=False,
@@ -169,6 +178,7 @@ def gpu_train(proc_id, n_gpus, GPUS,
     val_dataloader = NodeDataLoader(graph,
                                     val_nid_per_gpu,
                                     sampler,
+                                    use_ddp=n_gpus > 1,
                                     batch_size=batch_size,
                                     shuffle=True,
                                     drop_last=False,
@@ -185,14 +195,6 @@ def gpu_train(proc_id, n_gpus, GPUS,
                                                            start_t.hour,
                                                            start_t.minute,
                                                            start_t.second))
-
-    if n_gpus > 1:
-        dist_init_method = 'tcp://{}:{}'.format('127.0.0.1', '23456')
-        world_size = n_gpus
-        dist.init_process_group(backend='nccl',
-                                init_method=dist_init_method,
-                                world_size=world_size,
-                                rank=proc_id)
 
     in_feat = node_feat.shape[1]
     if gnn_model == 'graphsage':
