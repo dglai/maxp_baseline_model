@@ -167,19 +167,20 @@ def gpu_train(proc_id, n_gpus, GPUS,
         train_nid_per_gpu = train_nid[proc_id * train_div: (proc_id + 1) * train_div]
         val_nid_per_gpu = val_nid[proc_id * val_div: (proc_id + 1) * val_div]
 
-    sampler = MultiLayerNeighborSampler(fanouts)
+    train_sampler = MultiLayerNeighborSampler(fanouts)
     train_dataloader = NodeDataLoader(graph,
                                       train_nid_per_gpu,
-                                      sampler,
+                                      train_sampler,
                                       use_ddp=n_gpus > 1,
                                       batch_size=batch_size,
                                       shuffle=True,
                                       drop_last=False,
                                       num_workers=num_workers,
                                       )
+    val_sampler = MultiLayerNeighborSampler(fanouts)
     val_dataloader = NodeDataLoader(graph,
                                     val_nid_per_gpu,
-                                    sampler,
+                                    val_sampler,
                                     use_ddp=n_gpus > 1,
                                     batch_size=batch_size,
                                     shuffle=True,
