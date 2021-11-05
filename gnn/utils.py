@@ -27,9 +27,9 @@ def load_dgl_graph(base_path):
         label_data = pickle.load(f)
 
     labels = th.from_numpy(label_data['label'])
-    tr_label_idx = label_data['tr_label_idx']
-    val_label_idx = label_data['val_label_idx']
-    test_label_idx = label_data['test_label_idx']
+    tr_label_idx = th.from_numpy(label_data['tr_label_idx']).long()
+    val_label_idx = th.from_numpy(label_data['val_label_idx']).long()
+    test_label_idx = th.from_numpy(label_data['test_label_idx']).long()
     print('################ Label info: ################')
     print('Total labels (including not labeled): {}'.format(labels.shape[0]))
     print('               Training label number: {}'.format(tr_label_idx.shape[0]))
