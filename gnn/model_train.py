@@ -14,11 +14,11 @@ import torch.nn as thnn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.distributed as dist
-import torch.multiprocessing as mp
 
 import dgl
 from dgl.dataloading.neighbor import MultiLayerNeighborSampler
 from dgl.dataloading.pytorch import NodeDataLoader
+import dgl.multiprocessing as mp
 
 from models import GraphSageModel, GraphConvModel, GraphAttnModel
 from utils import load_dgl_graph, time_diff
