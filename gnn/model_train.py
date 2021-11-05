@@ -133,6 +133,8 @@ def gpu_train(proc_id, n_gpus, GPUS,
               output_folder='./output'):
 
     device_id = GPUS[proc_id]
+    device = th.device('cuda:{}'.format(device_id))
+
     print('Use GPU {} for training ......'.format(device_id))
 
     if n_gpus > 1:
@@ -171,6 +173,7 @@ def gpu_train(proc_id, n_gpus, GPUS,
     train_dataloader = NodeDataLoader(graph,
                                       train_nid_per_gpu,
                                       train_sampler,
+                                      device=device,
                                       use_ddp=n_gpus > 1,
                                       batch_size=batch_size,
                                       shuffle=True,
@@ -182,6 +185,7 @@ def gpu_train(proc_id, n_gpus, GPUS,
                                     val_nid_per_gpu,
                                     val_sampler,
                                     use_ddp=n_gpus > 1,
+                                    device=device,
                                     batch_size=batch_size,
                                     shuffle=True,
                                     drop_last=False,
@@ -231,6 +235,9 @@ def gpu_train(proc_id, n_gpus, GPUS,
     print('Plan to train {} epoches \n'.format(epochs))
 
     for epoch in range(epochs):
+        if n_gpus > 1:
+            train_dataloader.set_epoch(epoch)
+            val_dataloader.set_epoch(epoch)
 
         # mini-batch for training
         train_loss_list = []
