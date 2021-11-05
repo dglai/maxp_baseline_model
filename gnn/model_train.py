@@ -180,17 +180,17 @@ def gpu_train(proc_id, n_gpus, GPUS,
                                       drop_last=False,
                                       num_workers=num_workers,
                                       )
-    # val_sampler = MultiLayerNeighborSampler(fanouts)
-    # val_dataloader = NodeDataLoader(graph,
-    #                                 val_nid_per_gpu,
-    #                                 val_sampler,
-    #                                 use_ddp=n_gpus > 1,
-    #                                 device=device,
-    #                                 batch_size=batch_size,
-    #                                 shuffle=True,
-    #                                 drop_last=False,
-    #                                 num_workers=num_workers,
-    #                                 )
+    val_sampler = MultiLayerNeighborSampler(fanouts)
+    val_dataloader = NodeDataLoader(graph,
+                                    val_nid_per_gpu,
+                                    val_sampler,
+                                    use_ddp=n_gpus > 1,
+                                    device=device,
+                                    batch_size=batch_size,
+                                    shuffle=True,
+                                    drop_last=False,
+                                    num_workers=num_workers,
+                                    )
     e_t1 = dt.datetime.now()
     h, m, s = time_diff(e_t1, start_t)
     print('Model built used: {:02d}h {:02d}m {:02}s'.format(h, m, s))
@@ -237,7 +237,7 @@ def gpu_train(proc_id, n_gpus, GPUS,
     for epoch in range(epochs):
         if n_gpus > 1:
             train_dataloader.set_epoch(epoch)
-            # val_dataloader.set_epoch(epoch)
+            val_dataloader.set_epoch(epoch)
 
         # mini-batch for training
         train_loss_list = []
@@ -265,37 +265,37 @@ def gpu_train(proc_id, n_gpus, GPUS,
                                                                                                 tr_batch_pred.detach()))
 
         # mini-batch for validation
-        # val_loss_list = []
+        val_loss_list = []
         val_acc_list = []
-        # model.eval()
-        # for step, (input_nodes, seeds, blocks) in enumerate(val_dataloader):
-        #     # forward
-        #     batch_inputs, batch_labels = load_subtensor(node_feat, labels, seeds, input_nodes, device_id)
-        #     blocks = [block.to(device_id) for block in blocks]
-        #     # metric and loss
-        #     val_batch_logits = model(blocks, batch_inputs)
-        #     val_loss = loss_fn(val_batch_logits, batch_labels)
-        #
-        #     val_loss_list.append(val_loss.detach().cpu().numpy())
-        #     val_batch_pred = th.sum(th.argmax(val_batch_logits, dim=1) == batch_labels) / th.tensor(batch_labels.shape[0])
-        #
-        #     if step % 10 == 0:
-        #         print('In epoch:{:03d}|batch:{:04d}, val_loss:{:4f}, val_acc:{:.4f}'.format(epoch,
-        #                                                                                     step,
-        #                                                                                     np.mean(val_loss_list),
-        #                                                                                     val_batch_pred.detach()))
-        #
-        # # put validation results into message queue and aggregate at device 0
-        # if n_gpus > 1 and message_queue != None:
-        #     message_queue.put(val_loss_list)
-        #
-        #     if proc_id == 0:
-        #         for i in range(n_gpus):
-        #             loss = message_queue.get()
-        #             print(loss)
-        #             del loss
-        # else:
-        #     print(val_loss_list)
+        model.eval()
+        for step, (input_nodes, seeds, blocks) in enumerate(val_dataloader):
+            # forward
+            batch_inputs, batch_labels = load_subtensor(node_feat, labels, seeds, input_nodes, device_id)
+            blocks = [block.to(device_id) for block in blocks]
+            # metric and loss
+            val_batch_logits = model(blocks, batch_inputs)
+            val_loss = loss_fn(val_batch_logits, batch_labels)
+
+            val_loss_list.append(val_loss.detach().cpu().numpy())
+            val_batch_pred = th.sum(th.argmax(val_batch_logits, dim=1) == batch_labels) / th.tensor(batch_labels.shape[0])
+
+            if step % 10 == 0:
+                print('In epoch:{:03d}|batch:{:04d}, val_loss:{:4f}, val_acc:{:.4f}'.format(epoch,
+                                                                                            step,
+                                                                                            np.mean(val_loss_list),
+                                                                                            val_batch_pred.detach()))
+
+        # put validation results into message queue and aggregate at device 0
+        if n_gpus > 1 and message_queue != None:
+            message_queue.put(val_loss_list)
+
+            if proc_id == 0:
+                for i in range(n_gpus):
+                    loss = message_queue.get()
+                    print(loss)
+                    del loss
+        else:
+            print(val_loss_list)
 
     # -------------------------5. Collect stats ------------------------------------#
     # best_preds = earlystoper.val_preds
