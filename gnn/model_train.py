@@ -143,6 +143,8 @@ def gpu_train(proc_id, n_gpus, GPUS,
                                 world_size=world_size,
                                 rank=proc_id)
 
+    th.cuda.set_device(device_id)
+
     # ------------------- 1. Prepare data and split for multiple GPUs ------------------- #
     start_t = dt.datetime.now()
     print('Start graph building at: {}-{} {}:{}:{}'.format(start_t.month,
@@ -356,6 +358,8 @@ if __name__ == '__main__':
     graph, labels, train_nid, val_nid, test_nid, node_feat = load_dgl_graph(BASE_PATH)
     graph = dgl.to_bidirected(graph, copy_ndata=True)
     graph = dgl.add_self_loop(graph)
+
+    graph.create_formats_()
 
     # call train with CPU, one GPU, or multiple GPUs
     if GPUS[0] < 0:
